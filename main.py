@@ -48,11 +48,16 @@ def main():
 
         for account in response_json["result"]["current_validators"]:
             if account["account_id"] == "qbit.poolv1.near":
-                if account["num_produced_blocks"] < account ["num_expected_blocks"]:
+                if prev_state == 1 and account["num_produced_blocks"] < account ["num_expected_blocks"]:
                     send_message(api, chat_id, "Not enough blocks was produced")
 
-                if account["num_produced_chunks"] < account ["num_expected_chunks"]:
+                if prev_state == 1 and account["num_produced_chunks"] < account ["num_expected_chunks"]:
                     send_message(api, chat_id, "Not enough chunks was produced")
+                
+                if account["num_produced_blocks"] < account ["num_expected_blocks"] or account["num_produced_chunks"] < account ["num_expected_chunks"]: 
+                    prev_state = 0
+                else:
+                    prev_state = 1
 
                 break
 
