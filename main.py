@@ -30,38 +30,43 @@ def main():
         print(f"Unable to dump data due to: {err}")
         exit(1)
 
-    prev_state = 1
-    while True:
-        try:
-            response = requests.post(network, data=data, headers=headers)
-        except Exception as err:
-            print(f"Unable to send POST request due to: {err}")
-            time.sleep(5)
-            continue
+    logs = open("logs.txt", "r+")
+    try:
+        prev_delta = int(logs.read().splitlines()[-1].strip())
+    except:
+        prev_delta = None
+    
+    try:
+        response = requests.post(network, data=data, headers=headers)
+    except Exception as err:
+        print(f"Unable to send POST request due to: {err}")
+        time.sleep(5)
+        exit(1)
 
-        try:
-            response_json = json.loads(response.text)
-        except Exception as err:
-            print(f"Unable to load response due to: {err}")
-            time.sleep(5)
-            continue
+    try:
+        response_json = json.loads(response.text)
+    except Exception as err:
+        print(f"Unable to load response due to: {err}")
+        time.sleep(5)
+        exit(1)
 
-        for account in response_json["result"]["current_validators"]:
-            if account["account_id"] == "qbit.poolv1.near":
-                if prev_state == 1 and account["num_produced_blocks"] < account ["num_expected_blocks"]:
-                    send_message(api, chat_id, "Not enough blocks was produced")
 
-                if prev_state == 1 and account["num_produced_chunks"] < account ["num_expected_chunks"]:
-                    send_message(api, chat_id, "Not enough chunks was produced")
-                
-                if account["num_produced_blocks"] < account ["num_expected_blocks"] or account["num_produced_chunks"] < account ["num_expected_chunks"]: 
-                    prev_state = 0
-                else:
-                    prev_state = 1
+    for account in response_json["result"]["current_validators"]:
+        if account["account_id"] == "qbit.poolv1.near":
+            curr_delta = account["num_expected_blocks"] - account["num_produced_blocks"]
+            curr_delta += account["num_expected_chunks"] - account["num_produced_chunks"]
 
-                break
+            if prev_delta != curr_delta and curr_delta != 0 and account["num_produced_blocks"] < account ["num_expected_blocks"]:
+                send_message(api, chat_id, "Not enough blocks was produced")
 
-        time.sleep(1800)
+            if prev_delta != curr_delta and curr_delta != 0 and account["num_produced_chunks"] < account ["num_expected_chunks"]:
+                send_message(api, chat_id, "Not enough chunks was produced")
+            
+            if prev_delta != curr_delta:
+                logs.write(str(curr_delta) + "\n");
+
+            break
+
 
 if __name__ == "__main__":
     main()
