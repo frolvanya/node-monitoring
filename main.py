@@ -60,7 +60,7 @@ def main():
                 send_message(api, chat_id, f"Not enough blocks were produced ({account['num_produced_blocks']} produced / {account['num_expected_blocks']} expected)")
 
             if prev_delta != curr_delta and curr_delta != 0 and account["num_produced_chunks"] < account ["num_expected_chunks"]:
-                send_message(api, chat_id, "Not enough chunks were produced ({account['num_produced_chunks']} produced / {account['num_expected_chunks']} expected)")
+                send_message(api, chat_id, f"Not enough chunks were produced ({account['num_produced_chunks']} produced / {account['num_expected_chunks']} expected)")
             
             if prev_delta != curr_delta:
                 logs.write(str(curr_delta) + "\n");
