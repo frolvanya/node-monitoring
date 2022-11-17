@@ -57,10 +57,10 @@ def main():
             curr_delta += account["num_expected_chunks"] - account["num_produced_chunks"]
 
             if prev_delta != curr_delta and curr_delta != 0 and account["num_produced_blocks"] < account ["num_expected_blocks"]:
-                send_message(api, chat_id, f"Not enough blocks were produced ({account['num_produced_blocks']} produced / {account['num_expected_blocks']} expected)")
+                send_message(api, chat_id, f"Not enough blocks were produced ({account['num_produced_blocks']} produced / {account['num_expected_blocks']} expected)\n\nhttps://nearscope.net/validator/qbit.poolv1.near")
 
             if prev_delta != curr_delta and curr_delta != 0 and account["num_produced_chunks"] < account ["num_expected_chunks"]:
-                send_message(api, chat_id, f"Not enough chunks were produced ({account['num_produced_chunks']} produced / {account['num_expected_chunks']} expected)")
+                send_message(api, chat_id, f"Not enough chunks were produced ({account['num_produced_chunks']} produced / {account['num_expected_chunks']} expected)\n\nhttps://nearscope.net/validator/qbit.poolv1.near")
             
             if prev_delta != curr_delta:
                 logs.write(str(curr_delta) + "\n");
