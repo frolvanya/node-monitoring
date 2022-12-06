@@ -1,8 +1,7 @@
-import json
-import requests
-
 import os
 import time
+
+import requests
 
 
 def send_message(api, chat_id, message):
@@ -16,77 +15,70 @@ def send_message(api, chat_id, message):
 
 
 def main():
-    api = os.getenv("GRAFANA_BOT_API")
-    chat_id = "-1001216990785"
+    near_validator_account_id = os.getenv("NEAR_VALIDATOR_ACCOUNT_ID")
+    telegram_bot_api_key = os.getenv("TELEGRAM_BOT_API_KEY")
+    telegram_notifications_chat_id = os.getenv("TELEGRAM_NOTIFICATIONS_CHAT_ID")
+    near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
-    network = "https://rpc.mainnet.near.org"
-    headers = {"Content-type": "application/json", "Accept": "application/json"}
-    try:
-        data = json.dumps(
-            {
-                "jsonrpc": "2.0",
-                "id": "dontcare",
-                "method": "validators",
-                "params": "latest",
-            }
-        )
-    except Exception as err:
-        print(f"Unable to dump data due to: {err}")
+    near_validators_info = None
+    for _retry_attempts_left in range(10):
+        try:
+            near_validators_info = requests.post(
+                near_rpc_url,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": "dontcare",
+                    "method": "validators",
+                    "params": "latest",
+                }
+            ).json()
+        except Exception as err:
+            print(f"Unable to send POST request due to: {err}")
+            time.sleep(5)
+        break
+    if not near_validators_info:
         exit(1)
 
-    logs = open("logs.txt", "r+")
-    try:
-        prev_delta = int(logs.read().splitlines()[-1].strip())
-    except:
-        prev_delta = None
+    monitored_validator_account_stats = next(
+        (account for account in near_validators_info["result"]["current_validators"]
+            if account["account_id"] == near_validator_account_id),
+        None
+    )
 
-    try:
-        response = requests.post(network, data=data, headers=headers)
-    except Exception as err:
-        print(f"Unable to send POST request due to: {err}")
-        time.sleep(5)
-        exit(1)
+    with open("logs.txt", "r") as logs_file:
+        try:
+            prev_delta = int(logs_file.read().strip())
+        except:
+            prev_delta = None
 
-    try:
-        response_json = json.loads(response.text)
-    except Exception as err:
-        print(f"Unable to load response due to: {err}")
-        time.sleep(5)
-        exit(1)
-
-    for account in response_json["result"]["current_validators"]:
-        if account["account_id"] == "qbit.poolv1.near":
-            curr_delta = account["num_expected_blocks"] - account["num_produced_blocks"]
-            curr_delta += (
-                account["num_expected_chunks"] - account["num_produced_chunks"]
+    if monitored_validator_account_stats is None:
+        if prev_delta is not None:
+            send_message(
+                telegram_bot_api_key,
+                telegram_notifications_chat_id,
+                f"Validator {near_validator_account_id} is not validating current epoch \n\nhttps://nearscope.net/validator/{near_validator_account_id}",
             )
 
-            if (
-                prev_delta != curr_delta
-                and curr_delta >= 10
-                and account["num_produced_blocks"] < account["num_expected_blocks"]
-            ):
-                send_message(
-                    api,
-                    chat_id,
-                    f"Not enough blocks were produced ({account['num_produced_blocks']} produced / {account['num_expected_blocks']} expected)\n\nhttps://nearscope.net/validator/qbit.poolv1.near",
-                )
+            with open("logs.txt", "w") as logs_file:
+                pass
+        return
 
-            if (
-                prev_delta != curr_delta
-                and curr_delta >= 10
-                and account["num_produced_chunks"] < account["num_expected_chunks"]
-            ):
-                send_message(
-                    api,
-                    chat_id,
-                    f"Not enough chunks were produced ({account['num_produced_chunks']} produced / {account['num_expected_chunks']} expected)\n\nhttps://nearscope.net/validator/qbit.poolv1.near",
-                )
+    curr_delta = (
+        monitored_validator_account_stats["num_expected_blocks"] - monitored_validator_account_stats["num_produced_blocks"]
+        +
+        monitored_validator_account_stats["num_expected_chunks"] - monitored_validator_account_stats["num_produced_chunks"]
+    )
 
-            if prev_delta != curr_delta:
-                logs.write(str(curr_delta) + "\n")
+    if prev_delta != curr_delta:
+        if curr_delta >= 10:
+            send_message(
+                telegram_bot_api_key,
+                telegram_notifications_chat_id,
+                f"Not enough blocks or chunks were produced\nBlocks: {monitored_validator_account_stats['num_produced_blocks']} produced / {monitored_validator_account_stats['num_expected_blocks']} expected\nChunks: {monitored_validator_account_stats['num_produced_chunks']} produced / {monitored_validator_account_stats['num_expected_chunks']} expected\n\nhttps://nearscope.net/validator/{near_validator_account_id}",
+            )
 
-            break
+        with open("logs.txt", "w") as logs_file:
+            logs_file.write(str(curr_delta))
 
 
 if __name__ == "__main__":

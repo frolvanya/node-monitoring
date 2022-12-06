@@ -19,7 +19,9 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Run script
       env:
-          GRAFANA_BOT_API: ${{ secrets.GRAFANA_BOT_API }}
+        TELEGRAM_BOT_API_KEY: ${{ secrets.TELEGRAM_BOT_API_KEY }}
+        TELEGRAM_NOTIFICATIONS_CHAT_ID: ${{ secrets.TELEGRAM_NOTIFICATIONS_CHAT_ID }}
+        NEAR_VALIDATOR_ACCOUNT_ID: ${{ secrets.NEAR_VALIDATOR_ACCOUNT_ID }}
       run: python main.py
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
