@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 
 import requests
 
@@ -37,6 +38,8 @@ def main():
             time.sleep(5)
         break
     if not near_validators_info:
+        print("Unable to get near validators info")
+        traceback.print_exc()
         exit(1)
 
     monitored_validator_account_stats = next(
