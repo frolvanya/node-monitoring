@@ -25,6 +25,6 @@ jobs:
       run: python main.py
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: logs update
+        commit_message: state update
         branch: main
-        file_pattern: 'logs.txt'
+        file_pattern: 'state.txt'
