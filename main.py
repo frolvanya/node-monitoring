@@ -30,7 +30,7 @@ def main():
                     "id": "dontcare",
                     "method": "validators",
                     "params": "latest",
-                }
+                },
             ).json()
         except Exception as err:
             print(f"Unable to send POST request due to: {err}")
@@ -40,14 +40,17 @@ def main():
         exit(1)
 
     monitored_validator_account_stats = next(
-        (account for account in near_validators_info["result"]["current_validators"]
-            if account["account_id"] == near_validator_account_id),
-        None
+        (
+            account
+            for account in near_validators_info["result"]["current_validators"]
+            if account["account_id"] == near_validator_account_id
+        ),
+        None,
     )
 
-    with open("logs.txt", "r") as logs_file:
+    with open("state.txt", "r") as state_file:
         try:
-            prev_delta = int(logs_file.read().strip())
+            prev_delta = int(state_file.read().strip())
         except:
             prev_delta = None
 
@@ -59,14 +62,15 @@ def main():
                 f"Validator {near_validator_account_id} is not validating current epoch \n\nhttps://nearscope.net/validator/{near_validator_account_id}",
             )
 
-            with open("logs.txt", "w") as logs_file:
+            with open("state.txt", "w") as state_file:
                 pass
         return
 
     curr_delta = (
-        monitored_validator_account_stats["num_expected_blocks"] - monitored_validator_account_stats["num_produced_blocks"]
-        +
-        monitored_validator_account_stats["num_expected_chunks"] - monitored_validator_account_stats["num_produced_chunks"]
+        monitored_validator_account_stats["num_expected_blocks"]
+        - monitored_validator_account_stats["num_produced_blocks"]
+        + monitored_validator_account_stats["num_expected_chunks"]
+        - monitored_validator_account_stats["num_produced_chunks"]
     )
 
     if prev_delta != curr_delta:
@@ -77,8 +81,8 @@ def main():
                 f"Not enough blocks or chunks were produced\nBlocks: {monitored_validator_account_stats['num_produced_blocks']} produced / {monitored_validator_account_stats['num_expected_blocks']} expected\nChunks: {monitored_validator_account_stats['num_produced_chunks']} produced / {monitored_validator_account_stats['num_expected_chunks']} expected\n\nhttps://nearscope.net/validator/{near_validator_account_id}",
             )
 
-        with open("logs.txt", "w") as logs_file:
-            logs_file.write(str(curr_delta))
+        with open("state.txt", "w") as state_file:
+            state_file.write(str(curr_delta))
 
 
 if __name__ == "__main__":
