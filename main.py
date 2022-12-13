@@ -36,7 +36,8 @@ def main():
         except Exception as err:
             print(f"Unable to send POST request due to: {err}")
             time.sleep(5)
-        break
+        else:
+            break
     if not near_validators_info:
         print("Unable to get near validators info")
         traceback.print_exc()
