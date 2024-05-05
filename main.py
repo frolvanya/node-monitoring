@@ -38,7 +38,12 @@ def main():
             time.sleep(5)
         else:
             break
-    if not near_validators_info:
+
+    if (
+        not near_validators_info
+        or "result" not in near_validators_info
+        or "current_validators" not in near_validators_info["result"]
+    ):
         print("Unable to get near validators info")
         traceback.print_exc()
         exit(1)
