@@ -27,4 +27,5 @@ jobs:
       with:
         commit_message: state update
         branch: main
+        push_options: '--force'
         file_pattern: 'state.txt'
