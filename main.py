@@ -19,7 +19,7 @@ def main():
     near_validator_account_id = os.getenv("NEAR_VALIDATOR_ACCOUNT_ID")
     telegram_bot_api_key = os.getenv("TELEGRAM_BOT_API_KEY")
     telegram_notifications_chat_id = os.getenv("TELEGRAM_NOTIFICATIONS_CHAT_ID")
-    near_rpc_url = os.getenv("NEAR_RPC_URL", "https://beta.rpc.mainnet.near.org")
+    near_rpc_url = os.getenv("NEAR_RPC_URL", "https://rpc.mainnet.near.org")
 
     near_validators_info = None
     for _retry_attempts_left in range(10):
