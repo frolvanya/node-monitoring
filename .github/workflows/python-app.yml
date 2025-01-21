@@ -9,23 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
         python-version: "3.10"
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
     - name: Run script
       env:
         TELEGRAM_BOT_API_KEY: ${{ secrets.TELEGRAM_BOT_API_KEY }}
         TELEGRAM_NOTIFICATIONS_CHAT_ID: ${{ secrets.TELEGRAM_NOTIFICATIONS_CHAT_ID }}
         NEAR_VALIDATOR_ACCOUNT_ID: ${{ secrets.NEAR_VALIDATOR_ACCOUNT_ID }}
       run: python main.py
-    - uses: stefanzweifel/git-auto-commit-action@v4
+
+    - uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: state update
         branch: main
         push_options: '--force'
         file_pattern: 'state.txt'
+        commit_author: GitHub Actions Bot <github-actions@users.noreply.github.com>
